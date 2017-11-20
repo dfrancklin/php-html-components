@@ -21,7 +21,8 @@ class PicklistComponent implements IComponent
 	];
 
 	const TEMPLATES = [
-		'component' => '<div class="component__picklist%s" data-name="%s" data-title="%s" data-value="%s" data-label="%s" data-source="%s">%s%s%s</div>',
+		'component' => '<div class="component__picklist%s" data-name="%s" data-title="%s" data-value="%s" data-label="%s" data-source="%s">%s%s%s%s</div>',
+		'loader' => '<spam class="material-icons loader">sync</spam>',
 		'select-list' => '<div class="show-select-list"></div>',
 		'selected-list' => '<div class="show-selected-list">%s</div>',
 	];
@@ -62,6 +63,7 @@ class PicklistComponent implements IComponent
 	private function formatComponent()
 	{
 		$input = $this->formatInput();
+		$loader = self::TEMPLATES['loader'];
 		$selectList = self::TEMPLATES['select-list'];
 		$selectedList = $this->formatSelectedList();
 
@@ -90,6 +92,7 @@ class PicklistComponent implements IComponent
 			$this->label,
 			$this->source,
 			$input,
+			$loader,
 			$selectList,
 			$selectedList
 		);
@@ -131,22 +134,22 @@ class PicklistComponent implements IComponent
 	{
 		$head = '<thead class="thead-inverse">';
 		$head .= '<tr>';
-		$head .= '<th>#</th>';
+		$head .= '<th style="width: 5%; text-align: right;">#</th>';
 		$head .= '<th>' . $this->title . '</th>';
-		$head .= '<th>Action</th>';
+		$head .= '<th style="width: 5%;">Action</th>';
 		$head .= '</tr>';
 		$head .= '</thead>';
 
 		$body = '<tbody>';
 
 		$row = '<tr>
-			<td class="value">%s%s</td>
+			<td class="value" style="text-align: right;">%s%s</td>
 			<td class="label">%s</td>
 			<td>%s</td>
 		</tr>';
 
-		$hidden = new HiddenComponent;
-		$hidden->name = $this->name . '[]';
+		$inputValue = new HiddenComponent;
+		$inputLabel = new HiddenComponent;
 
 		$button = new ButtonComponent;
 		$button->type = 'link';
@@ -158,6 +161,8 @@ class PicklistComponent implements IComponent
 
 		foreach ($this->values as $item) {
 			if (is_array($item)) {
+				$inputValue->name = $this->name . '[' . $item[$this->value] . '][value]';
+				$inputLabel->name = $this->name . '[' . $item[$this->value] . '][label]';
 				$value = $item[$this->value];
 				$label = $item[$this->label];
 			} else {
@@ -165,10 +170,15 @@ class PicklistComponent implements IComponent
 				$label = $item->{$this->label};
 			}
 
-			$button->additional = ['data-value' => $value];
-			$hidden->value = $value;
+			$inputValue->name = $this->name . '[' . $value . '][value]';
+			$inputLabel->name = $this->name . '[' . $value . '][label]';
+			$inputValue->value = $value;
+			$inputLabel->value = $label;
 
-			$body .= sprintf($row, $hidden, $value, $label, $button);
+			$button->additional = ['data-value' => $value];
+
+
+			$body .= sprintf($row, $inputValue . $inputLabel, $value, $label, $button);
 		}
 
 		$body .= '';
